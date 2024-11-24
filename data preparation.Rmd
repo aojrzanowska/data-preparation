@@ -1,0 +1,412 @@
+---
+title: '269382'
+author: "Aleksandra Ojrzanowska"
+date: "2023-06-14"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+**PAKIETY**
+```{r,message=FALSE}
+library(dplyr)
+library(plyr)
+library(ggplot2)
+library(car)
+library("VIM")
+library(readxl)
+library(readxl)
+library("ggpubr")
+library("mice")
+library("naniar")
+library(gridExtra)
+library(caret)
+library(outliers)
+
+```
+
+**O BADANIU**
+
+**1. Cel badania:**
+
+Ocena wpływu sposobu ważenia piwa, zacierania, ekstrakcji oraz stężenia rozpuszczonych substancji na kolor piwa.
+
+**2. Opisy zmiennych:**
+  
+**BeerID** [cecha jakościowa, zmienna nominalna] – identyfikator piwa<br />
+**Name** [cecha jakościowa, zmienna nominalna] – nazwa piwa<br />
+**URL** [cecha jakościowa, zmienna nominalna] – odnośnik do przepisu<br />
+**Style** [cecha jakościowa, zmienna nominalna] – typ warzenia piwa<br />
+**StyleID** [cecha jakościowa, zmienna nominalna] – identyfikator typu ważenia piwa<br />
+**Size.L.** [cecha ilościowa, zmienna ilorazowa] - rozmiar<br />
+**OG** [cecha ilościowa, zmienna ilorazowa] – ciężar właściwy brzeczki przed fermentacją<br />
+**FG** [cecha ilościowa, zmienna ilorazowa] – ciężar właściwy brzeczki po fermentacji<br />
+**ABV** [cecha ilościowa, zmienna ilorazowa] – objętość alkoholu<br />
+**IBU** [cecha ilościowa, zmienna ilorazowa] – międzynarodowe jednostki goryczy<br />
+**Color** [cecha jakościowa, zmienna porządkowa] – kolor od jaśniejszego do najciemniejszego<br />
+**BoilSize** [cecha ilościowa, zmienna ilorazowa] – płyn na poczatku gotowania<br />
+**BoilTime** [cecha ilościowa, zmienna przedziałowa] – czas gotowania brzeczki<br />
+**BoilGravity** [cecha ilościowa, zmienna ilorazowa] – ciężar właściwy brzeczki przed gotowaniem<br />
+**Efficiency** [cecha ilościowa, zmienna przedziałowa] – wydajność ekstrakcji zacieru piwnego<br />
+**MashThickness** [cecha ilościowa, zmienna ilorazowa] – ilość wody na funt ziarna<br />
+**SugarScale** [cecha jakościowa, zmienna ilorazowa] – skala określająca stężenie rozpuszczonych substancji stałych w brzeczce<br />
+**BrewMethod**  [cecha jakościowa, zmienna nominalna] – technika warzenia piwa<br />
+**PitchRate** [cecha ilościowa, zmienna ilorazowa] – drożdże dodane do fermentatora na jednostkę ciężaru<br />
+**PrimaryTemp** [cecha ilościowa, zmienna ilorazowa] – temperatura na etapie fermentacji<br />
+**PrimingMethod** [cecha jakościowa, zmienna nominalna] – metoda zalewania cukru<br />
+**PrimingAmount** [cecha ilościowa, zmienna ilorazowa] – ilość użytego cukru<br />
+**UserId** [cecha jakościowa, zmienna nominalna] – ID użytkownika, który dodał przepis<br />
+
+**3. Wybrane zmienne:**<br />
+*Style*<br />
+*Color*<br />
+*Efficiency*<br />
+*MashThickness*<br />
+*SugraScale*<br />
+*PitchRate*<br />
+*BrewMethod*<br />
+
+
+**DANE**
+```{r}
+summary(danedoimputacji)
+```
+
+
+**1. Style i #2. StyleId**
+```{r}
+
+ggplot(dane1 , aes(x=factor(StyleID), fill=factor(Style))) +
+  geom_bar() +
+  theme(legend.position="none")
+```
+
+**3. Size**
+```{r}
+
+colnames(dane1)[colnames(dane1) == "Size.L."] ="Size"
+dane1$Size<-as.numeric(dane1$Size)
+dane1$size1 <- recode(dane1$Size, "0:19.99 ='<20'; 20:39.99= '20-39.99'; 40:59.99= '40-59.99'  ;else = '>60'")
+
+ggplot(dane1 , aes(x=factor(size1), fill=factor(size1))) +
+  geom_bar() +
+    scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**4. OG**
+```{r}
+dane1$OG1 <- recode(dane1$OG, "0:1.050 ='<1.051'; 1.051:1.058= '1.051-1.058'; 1.058:1.069= '1.058-1.069'  ; NA=NA ; else = '>1.069'")
+ggplot(dane1 , aes(x=factor(OG1), fill=factor(OG1))) +
+  geom_bar() +
+      scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**5. FG**
+```{r}
+dane1$FG1 <- recode(dane1$FG, "0:1.010 ='<1.011'; 1.011:1.013= '1.011-1.013'; 1.014:1.017= '1.014-1.017'  ; NA=NA ; else = '>1.017'")
+ggplot(dane1 , aes(x=factor(FG1), fill=factor(FG1))) +
+  geom_bar() +
+      scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**6. ABV**
+```{r}
+dane1$ABV1 <- recode(dane1$ABV, "0:5.079 ='<5.080'; 5.080:5.790= '5.080-5.790'; 5.791:6.830= '5.791-6.830'  ; NA=NA ; else = '>6.830'")
+ggplot(dane1 , aes(x=factor(ABV1), fill=factor(ABV1))) +
+  geom_bar() +
+        scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**7. IBU**
+```{r}
+dane1$IBU1 <- recode(dane1$IBU, "0:23.36 ='<23.37'; 23.37:35.77= '23.37-35.77'; 35.78:56.38= '35.78-56.38'  ; NA=NA ; else = '>56.38'")
+ggplot(dane1 , aes(x=factor(IBU1), fill=factor(IBU1))) +
+  geom_bar() +
+          scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**8. COLOR**
+```{r}
+dane1$Color1 <- recode(dane1$Color, "0:9.99 ='light'; 10:19.999= 'medium'; 20:29.999= 'dark'; 30:39.999= 'very dark'; 40= 'black'; NA=NA ;  else = NA")
+ggplot(dane1 , aes(x=factor(Color1), fill=factor(Color1))) +
+  geom_bar() +
+            scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464",
+                               "#87594B")) +
+  theme(legend.position="none")
+```
+
+**9. BOILSIZE**
+```{r}
+dane1$BoilSize1 <- recode(dane1$BoilSize, "0:19.99 ='<20'; 20:39.99= '20-40'; 40:59.99= '40-60'; NA=NA ;  else = '60+'")
+ggplot(dane1 , aes(x=factor(BoilSize1), fill=factor(BoilSize1))) +
+  geom_bar() +
+            scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**10. BOILTIME**
+```{r}
+dane1$BoilTime1 <- recode(dane1$BoilTime, "0:59.99 ='<60'; 60:119.99= '60-120'; 120:179.99= '120-180'; NA=NA ;  else = '180+'")
+ggplot(dane1 , aes(x=factor(BoilTime1), fill=factor(BoilTime1))) +
+  geom_bar() +
+            scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**11. BOILGRAVITY**
+```{r}
+dane1$BoilGravity1 <- recode(dane1$BoilGravity, "0:1.4999 ='<1.5'; 1.5:3= '1.5-3'; NA=NA ; else = '>3+'")
+ggplot(dane1 , aes(x=factor(BoilGravity1), fill=factor(BoilGravity1))) +
+  geom_bar() +
+            scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**12. Efficiency**
+```{r}
+dane1$Efficiency1 <- recode(dane1$Efficiency, "0:19.99 ='<20'; 20:39.99 ='20-40'; 40:59.99 ='40-60'; 60:79.99 ='60-80'; NA=NA ;  else = '80+'")
+ggplot(dane1 , aes(x=factor(Efficiency1), fill=factor(Efficiency1))) +
+  geom_bar() +
+              scale_fill_manual(values=c("#E5D6D1",
+                               "#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464",
+                               "#87594B")) +
+  theme(legend.position="none")
+```
+
+**13. MashThickness**
+```{r}
+dane1$MashThickness<-as.numeric(dane1$MashThickness)
+dane1$MashThickness1 <- recode(dane1$MashThickness, "0:1.4999 ='<1.5'; 1.5:2.9999 ='1.5-3'; NA=NA ; else = '3+'")
+ggplot(dane1 , aes(x=factor(MashThickness1), fill=factor(MashThickness1))) +
+  geom_bar() +
+              scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**14. SugarScale**
+```{r}
+ggplot(dane1 , aes(x=factor(SugarScale), fill=factor(SugarScale))) +
+  geom_bar() +
+                scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**15. BrewMethod**
+```{r}
+ggplot(dane1 , aes(x=factor(BrewMethod), fill=factor(BrewMethod))) +
+  geom_bar() +
+                scale_fill_manual(values=c("#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464")) +
+  theme(legend.position="none")
+```
+
+**16. PitchRate**
+```{r}
+ggplot(dane1 , aes(x=factor(PitchRate), fill=factor(PitchRate))) +
+  geom_bar() +
+              scale_fill_manual(values=c("#EDE2DF",
+                               "#E5D6D1",
+                               "#DBC6BF",
+                               "#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464",
+                               "#87594B",
+                               "#6E493E")) +
+  theme(legend.position="none")
+```
+
+**17. PrimaryTemp**
+```{r}
+dane1$PrimaryTemp1 <- recode(dane1$PrimaryTemp, "-20:-0.0001 ='<0'; 0:9.9999 ='0-10'; 10:19.9999 ='10-20'; 20:29.999 ='20-30'; 20:29.999 ='20-30'; 30:39.999 ='30-40'; NA=NA ; else = '40+'")
+ggplot(dane1 , aes(x=factor(PrimaryTemp1), fill=factor(PrimaryTemp1))) +
+  geom_bar() +
+                scale_fill_manual(values=c("#E5D6D1",
+                               "#D5BDB5",
+                               "#C7A79D",
+                               "#B78C7F",
+                               "#A87464",
+                               "#87594B",
+                               "#6E493E")) +
+  theme(legend.position="none")
+```
+
+**18. PrimingMethod**
+Cecha PrimingMethod wymagałaby nie tylko normalizacji, ale również szerszej wiedzy związanej z metodami zalewania piwa cukrem, aby odpowiednio skategoryzować przedstawione metody, tj. należałoby m.in. wiedzieć, które z metod posiadają więcej niż jedną nazwę (aby móc połączyc je ze sobą), które mimo podobnych nazw znacząco się od siebie różnią oraz wiedzieć jak duże znaczenie ma ilość zastosowanej substancji (ponieważ część danych zawiera informacje odnośnie ilości jednostek masy cukru). 
+Ponieważ nie posiadam takiej wiedzy, rezygnuję z tej zmiennej (dodatkowo, braki danych stanowią około 90% tej zmiennej)
+
+```{r}
+dane2 = subset(dane1, select = -c(PrimingMethod))
+```
+
+**19. PrimingAmount**
+Podobnie jak PrimingMethod, cecha PrimingAmount jest ciężka w standaryzacji. Pomijając fakt, że tutaj braki danych również stanowią 90% zbioru, wiele rekordów jest niedokładnych (zawierają same liczby bez jednostki, stwierdzenia takie jak "x opakowań" lub "x część kubka" które trudno skategoryzować).
+Z tej zmiennej również rezygnuję.
+
+```{r}
+dane2 = subset(dane2, select = -c(PrimingAmount))
+```
+
+**BRAKI**
+```{r}
+
+braki<-aggr(dane, col=c('#D5BDB5','#87594B'),
+                   numbers=TRUE, sortVars=TRUE,
+                   labels=names(dane), cex.axis=0.6,
+                   cex.lab=1.5,
+                   gap=1, ylab=c('Braki',"Wzór braków"))
+```
+                   
+                   
+**IMPUTACJA**
+
+**Metody imputacji:**
+1. HOT-DECK - poszukiwanie dawcy najbliżej podobnego ze względu na występujące zmienne 
+2. KNN (metoda najbliższego sąsiada)
+3. MATCH IMPUTATION - dawców wyszukuje się na podstawie dopasowania zmiennych kategorycznych
+
+**Style**
+```{r}
+style<-style[,c(2,1)]
+dane2$Style<-style$Style[match(dane2$StyleID, style$StyleID)]
+```
+
+**Color**
+```{r}
+dane2$Color <- recode(dane2$Color, "40.001:100 = NA")
+hotdeck_color<-hotdeck(dane2, variable = "Color")
+dane2$Color<-hotdeck_color$Color
+par(mfrow = c(1, 3))
+hist(hotdeck_color$Color, main = "Histogram")
+boxplot(hotdeck_color$Color, main = "Boxplot")
+qqnorm(hotdeck_color$Color, main = "Normal Q-Q plot")
+```
+
+**MashThickness**
+```{r}
+hotdeck_mashthickness<-hotdeck(dane2, variable = "MashThickness")
+dane2$MashThickness<-hotdeck_mashthickness$MashThickness
+par(mfrow = c(1, 3))
+hist(hotdeck_mashthickness$MashThickness, main = "Histogram")
+boxplot(hotdeck_mashthickness$MashThickness, main = "Boxplot")
+qqnorm(hotdeck_mashthickness$MashThickness, main = "Normal Q-Q plot")
+```
+
+**PitchRate**
+```{r}
+hotdeck_pitchrate<-hotdeck(dane2, variable = "PitchRate")
+dane2$PitchRate<-hotdeck_pitchrate$PitchRate
+par(mfrow = c(1, 3))
+hist(hotdeck_pitchrate$PitchRate, main = "Histogram")
+boxplot(hotdeck_pitchrate$PitchRate, main = "Boxplot")
+qqnorm(hotdeck_pitchrate$PitchRate, main = "Normal Q-Q plot")
+```
+
+**WARTOŚCI SKRAJNE**
+
+**MaskThickness** - ponieważ podczas wyrabiania piwa standardowa ilość wody na funt ziarna mieści się w granicach od 2 do 4, pozbędziemy się wartości skrajnych.
+
+```{r}
+mean = mean(hotdeck_mashthickness$MashThickness)
+std = sd(hotdeck_mashthickness$MashThickness)
+Tmin = mean-(3*std)
+Tmax = mean+(3*std)
+hotdeck_mashthickness$MashThickness[which(hotdeck_mashthickness$MashThickness < Tmin | hotdeck_mashthickness$MashThickness > Tmax)]
+hotdeck_mashthickness$MashThickness[which(hotdeck_mashthickness$MashThickness > Tmin | hotdeck_mashthickness$MashThickness < Tmax)]
+```
+
+**PitchRate** - standardowa ilość drożdży na jednostkę ciężaru to około 0.5 - 1.5 mln. komórek na ml. Myślę, że wartości skrajne w przypadku zmiennej PitchRate zmiennej są wciąż wiarygodne, dlatego nie ma potrzeby, aby je usuwać.
+
+```{r}
+meanPR = mean(hotdeck_pitchrate$PitchRate)
+stdPR = sd(hotdeck_pitchrate$PitchRate)
+TminPR = meanPR-(3*stdPR)
+TmaxPR = meanPR+(3*stdPR)
+hotdeck_pitchrate$PitchRate[which(hotdeck_pitchrate$PitchRate < TminPR | hotdeck_pitchrate$PitchRate > TmaxPR)]
+```
+
+**Efficiency** - wysoka wydajność ekstrakcji to taka oscylująca około 75 - 90%, z kolei niska wydajność zacieru to około 60 - 75%, dlatego pozbywamy się obserwacji skrajnych. Wciąż istnieją obserwacje obserwacje znajdujące się poza przedziałem 60 - 90%, jednak jestem skłonna uwierzyć w istnienie zarówno piw o 100% wydajności esktrakcji (według danych z internetu jest to bardzo trudne, ale możliwe) oraz tych znajdujących się na dość niskim poziomie ekstrakcji.
+
+```{r}
+meanEF = mean(dane2$Efficiency)
+stdEF = sd(dane2$Efficiency)
+TminEF = meanEF-(3*stdEF)
+TmaxEF = meanEF+(3*stdEF)
+dane2$Efficiency[which(dane2$Efficiency < TminEF | dane2$Efficiency > TmaxEF)]
+dane2$Efficiency[which(dane2$Efficiency > TminEF | dane2$Efficiency < TmaxEF)]
+```
+
+Zmienne takie jak **Color, BrewMethod, Style, SugarScale** to zmienne jakościowe, dlatego nie ma potrzeby aby analizować wartości skrajne w ich przypadku.
+
+**KORELACJE**
+
+**MashThickness x Efficiency**
+```{r}
+dane3_dobadania<-subset(dane2, select = c(Style, Color, Efficiency, MashThickness, SugarScale, PitchRate, BrewMethod))
+cor(dane3_dobadania$MashThickness, dane3_dobadania$Efficiency, use = "everything",
+     method = c("pearson", "kendall", "spearman"))
+
+```
+Korelacja na poziomie -0.001563954.
+
+**MashThickness x PitchRate**
+```{r}
+cor(dane3_dobadania$MashThickness, dane3_dobadania$PitchRate, use = "everything",
+     method = c("pearson", "kendall", "spearman"))
+```
+
+**Efficiency x PitchRate**
+```{r}
+cor(dane3_dobadania$Efficiency, dane3_dobadania$PitchRate, use = "everything",
+     method = c("pearson", "kendall", "spearman"))
+```
+Korelacja zmiennych nie przekracza 0,1.
+
+**LOSOWANIE**
+```{r}
+losowanie <- sample_n(dane3_dobadania, 1000)
+summary(losowanie)
+```
